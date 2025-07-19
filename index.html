@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>To Be Discovered Map</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body { margin:0; padding:0; font-family: sans-serif; }
+    #map { height: 90vh; }
+    select { width: 100%; padding: 10px; font-size: 16px; }
+  </style>
+</head>
+<body>
+
+<select id="daySelect"></select>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  const treasureLatLng = [-35.21757910622411, 138.8363502794547];
+
+  // Calculate daily shrinking radii from 914882m to 1m over 21 days
+  const startRadius = 914882;
+  const endRadius = 1;
+  const totalDays = 21;
+  const today = new Date();
+  const sept1 = new Date(today.getFullYear(), 8, 1); // month is 0-indexed (8 = Sept)
+
+  function getRadiusForDay(day) {
+    const step = (startRadius - endRadius) / (totalDays - 1);
+    return Math.round(startRadius - step * (day - 1));
+  }
+
+  const dayOptions = [];
+  for (let i = 1; i <= totalDays; i++) {
+    const dayDate = new Date(sept1);
+    dayDate.setDate(sept1.getDate() + i - 1);
+    const label = dayDate.toLocaleDateString("en-AU", { weekday: 'short', day: 'numeric', month: 'short' });
+    dayOptions.push({ day: i, label, radius: getRadiusForDay(i) });
+  }
+
+  const maxViewableDay = Math.min(
+    Math.floor((today - sept1) / (1000 * 60 * 60 * 24)) + 1,
+    totalDays
+  );
+
+  const map = L.map('map').setView(treasureLatLng, 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  let circle = null;
+
+  const select = document.getElementById('daySelect');
+  dayOptions.forEach(opt => {
+    if (opt.day <= maxViewableDay) {
+      const option = document.createElement('option');
+      option.value = opt.day;
+      option.textContent = `Day ${opt.day} - ${opt.label}`;
+      select.appendChild(option);
+    }
+  });
+
+  function drawCircle(day) {
+    if (circle) circle.remove();
+    const radius = getRadiusForDay(day);
+    circle = L.circle(treasureLatLng, {
+      radius,
+      color: '#FF0100',
+      fillColor: '#FF0100',
+      fillOpacity: 0.2
+    }).addTo(map);
+    map.fitBounds(circle.getBounds());
+  }
+
+  select.addEventListener('change', () => {
+    drawCircle(parseInt(select.value));
+  });
+
+  drawCircle(maxViewableDay);
+  select.value = maxViewableDay;
+</script>
+
+</body>
+</html>

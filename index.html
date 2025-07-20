@@ -1,86 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>To Be Discovered Map</title>
+  <title>To Be Discovered - Shrinking Circle</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <style>
-    body { margin:0; padding:0; font-family: sans-serif; }
-    #map { height: 90vh; }
-    select { width: 100%; padding: 10px; font-size: 16px; }
+    #map { height: 100vh; width: 100vw; }
   </style>
 </head>
 <body>
+  <div id="map"></div>
 
-<select id="daySelect"></select>
-<div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script>
+    // Circle data for Sept 1–21
+    const circles = [
+      { date: "2025-09-01", radius: 914882, lat: -31.083241, lon: 138.817667 },
+      { date: "2025-09-02", radius: 460571.25, lat: -36.231726, lon: 142.598797 },
+      { date: "2025-09-03", radius: 231861.46, lat: -35.001864, lon: 137.298267 },
+      { date: "2025-09-04", radius: 116724.04, lat: -36.185640, lon: 138.944586 },
+      { date: "2025-09-05", radius: 58761.39, lat: -35.184137, lon: 139.190243 },
+      { date: "2025-09-06", radius: 29581.75, lat: -35.283596, lon: 138.540279 },
+      { date: "2025-09-07", radius: 14892.09, lat: -35.184722, lon: 138.908327 },
+      { date: "2025-09-08", radius: 7497.0, lat: -35.255173, lon: 138.797647 },
+      { date: "2025-09-09", radius: 3774.15, lat: -35.245577, lon: 138.833538 },
+      { date: "2025-09-10", radius: 1899.99, lat: -35.231910, lon: 138.830753 },
+      { date: "2025-09-11", radius: 956.49, lat: -35.220673, lon: 138.832481 },
+      { date: "2025-09-12", radius: 481.52, lat: -35.219867, lon: 138.832470 },
+      { date: "2025-09-13", radius: 242.41, lat: -35.218060, lon: 138.834872 },
+      { date: "2025-09-14", radius: 122.03, lat: -35.217137, lon: 138.835876 },
+      { date: "2025-09-15", radius: 61.43, lat: -35.217823, lon: 138.836779 },
+      { date: "2025-09-16", radius: 30.93, lat: -35.217447, lon: 138.836583 },
+      { date: "2025-09-17", radius: 15.57, lat: -35.217587, lon: 138.836437 },
+      { date: "2025-09-18", radius: 7.84, lat: -35.217524, lon: 138.836379 },
+      { date: "2025-09-19", radius: 3.95, lat: -35.217569, lon: 138.836374 },
+      { date: "2025-09-20", radius: 1.99, lat: -35.217564, lon: 138.836344 },
+      { date: "2025-09-21", radius: 1.0, lat: -35.217581, lon: 138.836345 }
+    ];
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script>
-  const treasureLatLng = [-35.21757910622411, 138.8363502794547];
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split("T")[0];
 
-  // Calculate daily shrinking radii from 914882m to 1m over 21 days
-  const startRadius = 914882;
-  const endRadius = 1;
-  const totalDays = 21;
-  const today = new Date();
-  const sept1 = new Date(today.getFullYear(), 8, 1); // month is 0-indexed (8 = Sept)
+    // Find today's circle (or default to first if not in range)
+    const current = circles.find(c => c.date === today) || circles[0];
 
-  function getRadiusForDay(day) {
-    const step = (startRadius - endRadius) / (totalDays - 1);
-    return Math.round(startRadius - step * (day - 1));
-  }
+    // Init map
+    const map = L.map('map').setView([current.lat, current.lon], 9);
 
-  const dayOptions = [];
-  for (let i = 1; i <= totalDays; i++) {
-    const dayDate = new Date(sept1);
-    dayDate.setDate(sept1.getDate() + i - 1);
-    const label = dayDate.toLocaleDateString("en-AU", { weekday: 'short', day: 'numeric', month: 'short' });
-    dayOptions.push({ day: i, label, radius: getRadiusForDay(i) });
-  }
-
-  const maxViewableDay = Math.min(
-    Math.floor((today - sept1) / (1000 * 60 * 60 * 24)) + 1,
-    totalDays
-  );
-
-  const map = L.map('map').setView(treasureLatLng, 7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
-
-  let circle = null;
-
-  const select = document.getElementById('daySelect');
-  dayOptions.forEach(opt => {
-    if (opt.day <= maxViewableDay) {
-      const option = document.createElement('option');
-      option.value = opt.day;
-      option.textContent = `Day ${opt.day} - ${opt.label}`;
-      select.appendChild(option);
-    }
-  });
-
-  function drawCircle(day) {
-    if (circle) circle.remove();
-    const radius = getRadiusForDay(day);
-    circle = L.circle(treasureLatLng, {
-      radius,
-      color: '#FF0100',
-      fillColor: '#FF0100',
-      fillOpacity: 0.2
+    // Basemap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
     }).addTo(map);
-    map.fitBounds(circle.getBounds());
-  }
 
-  select.addEventListener('change', () => {
-    drawCircle(parseInt(select.value));
-  });
+    // Add the circle
+    L.circle([current.lat, current.lon], {
+      radius: current.radius,
+      color: "#FF0100",
+      fillColor: "#FF0100",
+      fillOpacity: 0.3
+    }).addTo(map);
 
-  drawCircle(maxViewableDay);
-  select.value = maxViewableDay;
-</script>
-
+  </script>
 </body>
 </html>

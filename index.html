@@ -1,40 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <title>To Be Discovered Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
   <style>
-    #map { height: 100vh; width: 100%; }
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+    #error {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      text-align: center;
+      padding: 0.5em;
+      font-family: sans-serif;
+      display: none;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
+  <div id="error"></div>
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     async function initMap() {
-      // Fetch current coordinates & radius from your API
-      const res = await fetch('https://your-deno-api.example.com/current-coordinates');
-      const data = await res.json();
-      
-      const coords = data.coordinates; // [lat, lng]
-      const radius = data.radius;      // in meters
+      const errorEl = document.getElementById('error');
+      try {
+        const res = await fetch('https://cur-coo.deno.dev/current-coordinates');
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        const data = await res.json();
 
-      // Init map
-      const map = L.map('map').setView(coords, 10);
+        // Expecting: { coordinates: [lat, lng], diameter: <number> }
+        const coords = data.coordinates;
+        const diameter = data.diameter;
 
-      // Add OpenStreetMap tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
+        if (!coords || coords.length !== 2 || typeof diameter !== 'number') {
+          throw new Error('Invalid data from API');
+        }
 
-      // Add circle
-      L.circle(coords, {
-        color: 'red',
-        fillColor: '#f03',
-        fillOpacity: 0.2,
-        radius: radius // radius in meters
-      }).addTo(map);
+        const radius = diameter / 2; // Leaflet wants radius in meters
+
+        // Initialize map
+        const map = L.map('map').setView(coords, 8);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Draw the circle
+        L.circle(coords, {
+          color: 'red',
+          fillColor: '#f03',
+          fillOpacity: 0.2,
+          radius: radius
+        }).addTo(map);
+
+        // Add marker at center
+        L.marker(coords).addTo(map);
+
+      } catch (err) {
+        console.error(err);
+        errorEl.textContent = 'Error loading map data: ' + err.message;
+        errorEl.style.display = 'block';
+      }
     }
 
     initMap();

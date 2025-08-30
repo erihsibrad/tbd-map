@@ -1,41 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>To Be Discovered Map</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <style>
-    #map { height: 100vh; width: 100%; }
-  </style>
-</head>
-<body>
-  <div id="map"></div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script>
-    // 👉 Edit these values whenever you want to change the circle
-    const lat = -35.03127281415016;  // current day's center latitude
-    const lon = 138.7031012075528;   // current day's center longitude
-    const diameter = 1048576;        // current day's diameter in metres
+const BIN_ID = "PUT_YOUR_BIN_ID_HERE";
+const MASTER_KEY = "PUT_YOUR_MASTER_KEY_HERE"; // only if private
 
-    const map = L.map('map').setView([lat, lon], 13);
+fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+  headers: {
+    "X-Master-Key": MASTER_KEY // remove if your bin is public
+  }
+})
+  .then(res => res.json())
+  .then(data => {
+    const { lat, lon, diameter } = data.record;
+
+    const map = L.map('map').setView([lat, lon], 10);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    const circle = L.circle([lat, lon], {
-      radius: diameter / 2,
+    L.circle([lat, lon], {
+      radius: diameter / 2, // Leaflet uses radius, not diameter
       color: 'red',
-      fillColor: '#f03',
-      fillOpacity: 0.3
+      fillOpacity: 0.1
     }).addTo(map);
-
-    map.fitBounds(circle.getBounds());
-  </script>
-</body>
-</html>
+  })
+  .catch(err => console.error(err));

@@ -1,72 +1,94 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Treasure Hunt Map</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet/dist/leaflet.css"
-    />
-    <style>
-      #map { height: 100vh; width: 100vw; }
-    </style>
-  </head>
-  <body>
-    <div id="map"></div>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-      const BIN_ID = "68b2fc7d43b1c97be930be9e";
-      const MASTER_KEY = "$2a$10$50ktT5zrZbCrk5UnSNJaf.zzPNwVcGaUTtVjVbDeHxp31robYTlEu"; // remove if public
+<head>
+  <meta charset="utf-8" />
+  <title>TBD Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+    }
+    .street-view-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: sans-serif;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div class="street-view-btn" id="streetViewBtn">Open Street View</div>
+  <script>
+    const BIN_ID = "68b2fc7d43b1c97be930be9e";
+    const MASTER_KEY = "$2a$10$50ktT5zrZbCrk5UnSNJaf.zzPNwVcGaUTtVjVbDeHxp31robYTlEu"; // remove if public
 
-      fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-        headers: {
-          "X-Master-Key": MASTER_KEY // remove if your bin is public
-        }
-      })
+    fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+      headers: {
+        "X-Master-Key": MASTER_KEY // remove if your bin is public
+      }
+    })
       .then(res => res.json())
       .then(data => {
         const { lat, lon, diameter } = data.record;
 
         // Base layers
-        const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
-          attribution: '© OpenStreetMap'
+          attribution: '&copy; OpenStreetMap contributors'
         });
 
-        const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-          attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        const satelliteStreets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 19,
+          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, etc.'
         });
 
-        const globe = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-          maxZoom: 20,
-          attribution: '© Stadia Maps, © OpenMapTiles © OpenStreetMap contributors'
+        const satelliteOnly = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 19,
+          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, etc.'
         });
 
-        // Map setup
+        // Map
         const map = L.map('map', {
           center: [lat, lon],
           zoom: 10,
-          layers: [street]
+          layers: [streetMap]
         });
 
         // Circle
         L.circle([lat, lon], {
-          radius: diameter / 2, // Leaflet uses radius (m), not diameter
+          radius: diameter / 2,
           color: 'red',
           fillOpacity: 0.1
         }).addTo(map);
 
         // Layer control
         const baseMaps = {
-          "Street": street,
-          "Satellite": satellite,
-          "Globe": globe
+          "Street Map": streetMap,
+          "Satellite + Streets": satelliteStreets,
+          "Satellite Only": satelliteOnly
         };
-
         L.control.layers(baseMaps).addTo(map);
+
+        // Street View button
+        document.getElementById('streetViewBtn').addEventListener('click', () => {
+          const gmapsUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+          window.open(gmapsUrl, '_blank');
+        });
       })
       .catch(err => console.error(err));
-    </script>
-  </body>
+  </script>
+</body>
 </html>

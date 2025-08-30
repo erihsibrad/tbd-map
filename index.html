@@ -40,7 +40,7 @@
     async function initMap() {
       const errorEl = document.getElementById('error');
       try {
-        const res = await fetch('https://cur-coo.deno.dev/');
+        const res = await fetch(https://cur-coo.deno.dev/);
         if (!res.ok) throw new Error(`API error: ${res.status}`);
         const data = await res.json();
 

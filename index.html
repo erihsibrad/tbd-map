@@ -1,66 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>To Be Discovered - Shrinking Circle</title>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <title>To Be Discovered Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <style>
-    #map { height: 100vh; width: 100vw; }
+    #map { height: 100vh; width: 100%; }
   </style>
 </head>
 <body>
   <div id="map"></div>
-
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // Circle data for Sept 1–21
-    const circles = [
-      { date: "2025-09-01", radius: 914882, lat: -31.083241, lon: 138.817667 },
-      { date: "2025-09-02", radius: 460571.25, lat: -36.231726, lon: 142.598797 },
-      { date: "2025-09-03", radius: 231861.46, lat: -35.001864, lon: 137.298267 },
-      { date: "2025-09-04", radius: 116724.04, lat: -36.185640, lon: 138.944586 },
-      { date: "2025-09-05", radius: 58761.39, lat: -35.184137, lon: 139.190243 },
-      { date: "2025-09-06", radius: 29581.75, lat: -35.283596, lon: 138.540279 },
-      { date: "2025-09-07", radius: 14892.09, lat: -35.184722, lon: 138.908327 },
-      { date: "2025-09-08", radius: 7497.0, lat: -35.255173, lon: 138.797647 },
-      { date: "2025-09-09", radius: 3774.15, lat: -35.245577, lon: 138.833538 },
-      { date: "2025-09-10", radius: 1899.99, lat: -35.231910, lon: 138.830753 },
-      { date: "2025-09-11", radius: 956.49, lat: -35.220673, lon: 138.832481 },
-      { date: "2025-09-12", radius: 481.52, lat: -35.219867, lon: 138.832470 },
-      { date: "2025-09-13", radius: 242.41, lat: -35.218060, lon: 138.834872 },
-      { date: "2025-09-14", radius: 122.03, lat: -35.217137, lon: 138.835876 },
-      { date: "2025-09-15", radius: 61.43, lat: -35.217823, lon: 138.836779 },
-      { date: "2025-09-16", radius: 30.93, lat: -35.217447, lon: 138.836583 },
-      { date: "2025-09-17", radius: 15.57, lat: -35.217587, lon: 138.836437 },
-      { date: "2025-09-18", radius: 7.84, lat: -35.217524, lon: 138.836379 },
-      { date: "2025-09-19", radius: 3.95, lat: -35.217569, lon: 138.836374 },
-      { date: "2025-09-20", radius: 1.99, lat: -35.217564, lon: 138.836344 },
-      { date: "2025-09-21", radius: 1.0, lat: -35.217581, lon: 138.836345 }
-    ];
+    async function initMap() {
+      // Fetch current coordinates & radius from your API
+      const res = await fetch('https://your-deno-api.example.com/current-coordinates');
+      const data = await res.json();
+      
+      const coords = data.coordinates; // [lat, lng]
+      const radius = data.radius;      // in meters
 
-    // Get today's date in YYYY-MM-DD format
-    const today = new Date().toISOString().split("T")[0];
+      // Init map
+      const map = L.map('map').setView(coords, 10);
 
-    // Find today's circle (or default to first if not in range)
-    const current = circles.find(c => c.date === today) || circles[0];
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
 
-    // Init map
-    const map = L.map('map').setView([current.lat, current.lon], 9);
+      // Add circle
+      L.circle(coords, {
+        color: 'red',
+        fillColor: '#f03',
+        fillOpacity: 0.2,
+        radius: radius // radius in meters
+      }).addTo(map);
+    }
 
-    // Basemap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-
-    // Add the circle
-    L.circle([current.lat, current.lon], {
-      radius: current.radius,
-      color: "#FF0100",
-      fillColor: "#FF0100",
-      fillOpacity: 0.3
-    }).addTo(map);
-
+    initMap();
   </script>
 </body>
 </html>

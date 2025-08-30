@@ -1,25 +1,48 @@
-const BIN_ID = "68b2fc7d43b1c97be930be9e";
-const MASTER_KEY = "$2a$10$50ktT5zrZbCrk5UnSNJaf.zzPNwVcGaUTtVjVbDeHxp31robYTlEu"; // only if private
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>TBD Map</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet/dist/leaflet.css"
+    />
+    <style>
+      #map {
+        height: 100vh;
+        width: 100vw;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
 
-fetch(`https://api.jsonbin.io/v3/b/$68b2fc7d43b1c97be930be9e/latest`, {
-  headers: {
-    "X-Master-Key": MASTER_KEY // remove if your bin is public
-  }
-})
-  .then(res => res.json())
-  .then(data => {
-    const { lat, lon, diameter } = data.record;
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+      const BIN_ID = "68b2fc7d43b1c97be930be9e";
+      const MASTER_KEY = "$2a$10$50ktT5zrZbCrk5UnSNJaf.zzPNwVcGaUTtVjVbDeHxp31robYTlEu"; // only if private
 
-    const map = L.map('map').setView([lat, lon], 10);
+      fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+        headers: {
+          "X-Master-Key": MASTER_KEY // remove if your bin is public
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const { lat, lon, diameter } = data.record;
+        const map = L.map('map').setView([lat, lon], 10);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-    }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+        }).addTo(map);
 
-    L.circle([lat, lon], {
-      radius: diameter / 2, // Leaflet uses radius, not diameter
-      color: 'red',
-      fillOpacity: 0.1
-    }).addTo(map);
-  })
-  .catch(err => console.error(err));
+        L.circle([lat, lon], {
+          radius: diameter / 2, // Leaflet uses radius, not diameter
+          color: 'red',
+          fillOpacity: 0.1
+        }).addTo(map);
+      })
+      .catch(err => console.error(err));
+    </script>
+  </body>
+</html>

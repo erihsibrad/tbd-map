@@ -40,7 +40,7 @@
     async function initMap() {
       const errorEl = document.getElementById('error');
       try {
-        const res = await fetch('https://cur-coo.deno.dev/current-coordinates');
+        const res = await fetch('https://cur-coo.deno.dev/update');
         if (!res.ok) throw new Error(`API error: ${res.status}`);
         const data = await res.json();
 

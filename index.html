@@ -1,63 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <title>To Be Discovered Map</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-sA+U7+7Rb4wExZ0rC5v/Dv2dsoZQqMXH78N8hMCM3yk="
-      crossorigin=""
-    />
-    <style>
-        #map { height: 100vh; width: 100%; }
-    </style>
+  <meta charset="utf-8" />
+  <title>To Be Discovered Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <style>
+    #map { height: 100vh; width: 100%; }
+  </style>
 </head>
 <body>
-    <div id="map"></div>
-    <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-      integrity="sha256-oQnA6Y7w1ymGQggzZ+Q2sAe1hI9C3bF0QAdxwNRO2jM="
-      crossorigin=""
-    ></script>
-    <script>
-        // Initialize map centered near treasure
-        const treasure = [-35.03127281415016, 138.7031012075528];
-        const map = L.map('map').setView(treasure, 13);
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // 👉 Edit these values whenever you want to change the circle
+    const lat = -35.03127281415016;  // current day's center latitude
+    const lon = 138.7031012075528;   // current day's center longitude
+    const diameter = 1048576;        // current day's diameter in metres
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+    const map = L.map('map').setView([lat, lon], 13);
 
-        async function loadCircle() {
-            let lat = treasure[0];
-            let lon = treasure[1];
-            let diameter = 500; // fallback diameter
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-            try {
-                const res = await fetch('https://cur-coo.deno.dev/');
-                if (!res.ok) throw new Error("Network response not ok");
-                const data = await res.json();
-                lat = data.lat ?? lat;
-                lon = data.lon ?? lon;
-                diameter = data.diameter ?? diameter;
-            } catch (err) {
-                console.warn("Failed to fetch circle from API, using fallback:", err);
-            }
+    const circle = L.circle([lat, lon], {
+      radius: diameter / 2,
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.3
+    }).addTo(map);
 
-            const circle = L.circle([lat, lon], {
-                radius: diameter / 2,
-                color: 'red',
-                fillColor: '#f03',
-                fillOpacity: 0.3
-            }).addTo(map);
-
-            map.fitBounds(circle.getBounds());
-        }
-
-        loadCircle();
-    </script>
+    map.fitBounds(circle.getBounds());
+  </script>
 </body>
 </html>

@@ -1,26 +1,23 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <title>TBD Map</title>
+    <title>Treasure Hunt Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet/dist/leaflet.css"
     />
     <style>
-      #map {
-        height: 100vh;
-        width: 100vw;
-      }
+      #map { height: 100vh; width: 100vw; }
     </style>
   </head>
   <body>
     <div id="map"></div>
-
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
       const BIN_ID = "68b2fc7d43b1c97be930be9e";
-      const MASTER_KEY = "$2a$10$50ktT5zrZbCrk5UnSNJaf.zzPNwVcGaUTtVjVbDeHxp31robYTlEu"; // only if private
+      const MASTER_KEY = "$2a$10$50ktT5zrZbCrk5UnSNJaf.zzPNwVcGaUTtVjVbDeHxp31robYTlEu"; // remove if public
 
       fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
         headers: {
@@ -30,17 +27,44 @@
       .then(res => res.json())
       .then(data => {
         const { lat, lon, diameter } = data.record;
-        const map = L.map('map').setView([lat, lon], 10);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // Base layers
+        const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
-        }).addTo(map);
+          attribution: '© OpenStreetMap'
+        });
 
+        const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        });
+
+        const globe = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+          maxZoom: 20,
+          attribution: '© Stadia Maps, © OpenMapTiles © OpenStreetMap contributors'
+        });
+
+        // Map setup
+        const map = L.map('map', {
+          center: [lat, lon],
+          zoom: 10,
+          layers: [street]
+        });
+
+        // Circle
         L.circle([lat, lon], {
-          radius: diameter / 2, // Leaflet uses radius, not diameter
+          radius: diameter / 2, // Leaflet uses radius (m), not diameter
           color: 'red',
           fillOpacity: 0.1
         }).addTo(map);
+
+        // Layer control
+        const baseMaps = {
+          "Street": street,
+          "Satellite": satellite,
+          "Globe": globe
+        };
+
+        L.control.layers(baseMaps).addTo(map);
       })
       .catch(err => console.error(err));
     </script>

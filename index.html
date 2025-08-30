@@ -1,77 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>To Be Discovered Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    html, body { height: 100%; margin: 0; }
-    #map { height: 100%; width: 100%; }
-    #error {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: rgba(255, 0, 0, 0.8);
-      color: white;
-      text-align: center;
-      padding: 0.5em;
-      font-family: sans-serif;
-      display: none;
-      z-index: 1000;
-    }
-  </style>
+    <meta charset="utf-8" />
+    <title>To Be Discovered Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-sA+U7+7Rb4wExZ0rC5v/Dv2dsoZQqMXH78N8hMCM3yk="
+      crossorigin=""
+    />
+    <style>
+        #map { height: 100vh; width: 100%; }
+    </style>
 </head>
 <body>
-  <div id="error"></div>
-  <div id="map"></div>
+    <div id="map"></div>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-oQnA6Y7w1ymGQggzZ+Q2sAe1hI9C3bF0QAdxwNRO2jM="
+      crossorigin=""
+    ></script>
+    <script>
+        const map = L.map('map').setView([-35.0313, 138.7031], 13);
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    async function initMap() {
-      const errorEl = document.getElementById('error');
-      try {
-        // Fetch current coordinates and diameter from Deno Deploy API
-        const res = await fetch('https://cur-coo.deno.dev/');
-        if (!res.ok) throw new Error(`API error: ${res.status}`);
-        const data = await res.json();
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-        const coords = [data.lat, data.lon];
-        const diameter = data.diameter;
-        if (!coords || coords.length !== 2 || typeof diameter !== 'number') {
-          throw new Error('Invalid data from API');
+        async function loadCircle() {
+            try {
+                const res = await fetch('https://cur-coo.deno.dev/');
+                const data = await res.json();
+                // Expected format: { "lat": ..., "lon": ..., "diameter": ... }
+                const { lat, lon, diameter } = data;
+
+                const circle = L.circle([lat, lon], {
+                    radius: diameter / 2,
+                    color: 'red',
+                    fillColor: '#f03',
+                    fillOpacity: 0.3
+                }).addTo(map);
+
+                map.fitBounds(circle.getBounds());
+            } catch (err) {
+                console.error('Error loading circle:', err);
+            }
         }
 
-        const radius = diameter / 2; // Leaflet requires radius
-
-        // Initialize map centered on coords
-        const map = L.map('map').setView(coords, 8);
-
-        // OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Draw circle for the current hunt area
-        L.circle(coords, {
-          color: 'red',
-          fillColor: '#f03',
-          fillOpacity: 0.2,
-          radius: radius
-        }).addTo(map);
-
-        // Add marker at center
-        L.marker(coords).addTo(map);
-
-      } catch (err) {
-        console.error(err);
-        errorEl.textContent = 'Error loading map data: ' + err.message;
-        errorEl.style.display = 'block';
-      }
-    }
-
-    initMap();
-  </script>
+        loadCircle();
+    </script>
 </body>
 </html>

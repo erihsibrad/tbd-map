@@ -2,21 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>To Be Discovered Map</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css"
-  />
+  <title>To Be Discovered Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
-    #map {
-      height: 100%;
-      width: 100%;
-    }
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100%; width: 100%; }
     #error {
       position: absolute;
       top: 0;
@@ -35,33 +26,34 @@
 <body>
   <div id="error"></div>
   <div id="map"></div>
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     async function initMap() {
       const errorEl = document.getElementById('error');
       try {
-        const res = await fetch(https://cur-coo.deno.dev/);
+        // Fetch current coordinates and diameter from Deno Deploy API
+        const res = await fetch('https://cur-coo.deno.dev/');
         if (!res.ok) throw new Error(`API error: ${res.status}`);
         const data = await res.json();
 
-        // Expecting: { coordinates: [lat, lng], diameter: <number> }
-        const coords = data.coordinates;
+        const coords = [data.lat, data.lon];
         const diameter = data.diameter;
-
         if (!coords || coords.length !== 2 || typeof diameter !== 'number') {
           throw new Error('Invalid data from API');
         }
 
-        const radius = diameter / 2; // Leaflet wants radius in meters
+        const radius = diameter / 2; // Leaflet requires radius
 
-        // Initialize map
+        // Initialize map centered on coords
         const map = L.map('map').setView(coords, 8);
 
+        // OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Draw the circle
+        // Draw circle for the current hunt area
         L.circle(coords, {
           color: 'red',
           fillColor: '#f03',

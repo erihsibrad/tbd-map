@@ -22,7 +22,9 @@
       crossorigin=""
     ></script>
     <script>
-        const map = L.map('map').setView([-35.0313, 138.7031], 13);
+        // Initialize map centered near treasure
+        const treasure = [-35.03127281415016, 138.7031012075528];
+        const map = L.map('map').setView(treasure, 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -30,23 +32,29 @@
         }).addTo(map);
 
         async function loadCircle() {
+            let lat = treasure[0];
+            let lon = treasure[1];
+            let diameter = 500; // fallback diameter
+
             try {
                 const res = await fetch('https://cur-coo.deno.dev/');
+                if (!res.ok) throw new Error("Network response not ok");
                 const data = await res.json();
-                // Expected format: { "lat": ..., "lon": ..., "diameter": ... }
-                const { lat, lon, diameter } = data;
-
-                const circle = L.circle([lat, lon], {
-                    radius: diameter / 2,
-                    color: 'red',
-                    fillColor: '#f03',
-                    fillOpacity: 0.3
-                }).addTo(map);
-
-                map.fitBounds(circle.getBounds());
+                lat = data.lat ?? lat;
+                lon = data.lon ?? lon;
+                diameter = data.diameter ?? diameter;
             } catch (err) {
-                console.error('Error loading circle:', err);
+                console.warn("Failed to fetch circle from API, using fallback:", err);
             }
+
+            const circle = L.circle([lat, lon], {
+                radius: diameter / 2,
+                color: 'red',
+                fillColor: '#f03',
+                fillOpacity: 0.3
+            }).addTo(map);
+
+            map.fitBounds(circle.getBounds());
         }
 
         loadCircle();

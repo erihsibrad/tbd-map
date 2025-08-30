@@ -2,93 +2,68 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>TBD Map</title>
+  <title>TBD Map with Layers</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    html, body, #map {
-      height: 100%;
-      margin: 0;
-    }
-    .street-view-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 1000;
-      background: white;
-      padding: 6px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: sans-serif;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    }
+    #map { height: 100vh; width: 100%; }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div class="street-view-btn" id="streetViewBtn">Open Street View</div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     const BIN_ID = "68b2fc7d43b1c97be930be9e";
-    const MASTER_KEY = "$2a$10$50ktT5zrZbCrk5UnSNJaf.zzPNwVcGaUTtVjVbDeHxp31robYTlEu"; // remove if public
+    const MASTER_KEY = "$2a$10$50ktT5zrZbCrk5UnSNJaf.zzPNwVcGaUTtVjVbDeHxp31robYTlEu"; // only if private
 
     fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
       headers: {
         "X-Master-Key": MASTER_KEY // remove if your bin is public
       }
     })
-      .then(res => res.json())
-      .then(data => {
-        const { lat, lon, diameter } = data.record;
+    .then(res => res.json())
+    .then(data => {
+      const { lat, lon, diameter } = data.record;
 
-        // Base layers
-        const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; OpenStreetMap contributors'
-        });
+      const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      });
 
-        const satelliteStreets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-          maxZoom: 19,
-          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, etc.'
-        });
+      const satellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains:['mt0','mt1','mt2','mt3'],
+        attribution: '© Google'
+      });
 
-        const satelliteOnly = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-          maxZoom: 19,
-          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, etc.'
-        });
+      const hybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains:['mt0','mt1','mt2','mt3'],
+        attribution: '© Google'
+      });
 
-        // Map
-        const map = L.map('map', {
-          center: [lat, lon],
-          zoom: 10,
-          layers: [streetMap]
-        });
+      const map = L.map('map', {
+        center: [lat, lon],
+        zoom: 10,
+        layers: [streets]
+      });
 
-        // Circle
-        L.circle([lat, lon], {
-          radius: diameter / 2,
-          color: 'red',
-          fillOpacity: 0.1
-        }).addTo(map);
+      const baseMaps = {
+        "Streets": streets,
+        "Satellite": satellite,
+        "Hybrid": hybrid
+      };
 
-        // Layer control
-        const baseMaps = {
-          "Street Map": streetMap,
-          "Satellite + Streets": satelliteStreets,
-          "Satellite Only": satelliteOnly
-        };
-        L.control.layers(baseMaps).addTo(map);
+      L.control.layers(baseMaps).addTo(map);
 
-        // Street View button
-        document.getElementById('streetViewBtn').addEventListener('click', () => {
-          const gmapsUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
-          window.open(gmapsUrl, '_blank');
-        });
-      })
-      .catch(err => console.error(err));
+      L.circle([lat, lon], {
+        radius: diameter / 2,
+        color: 'red',
+        fillOpacity: 0.1
+      }).addTo(map);
+    })
+    .catch(err => console.error(err));
   </script>
 </body>
 </html>

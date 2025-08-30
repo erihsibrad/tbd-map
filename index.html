@@ -1,7 +1,7 @@
-const BIN_ID = "PUT_YOUR_BIN_ID_HERE";
-const MASTER_KEY = "PUT_YOUR_MASTER_KEY_HERE"; // only if private
+const BIN_ID = "68b2fc7d43b1c97be930be9e";
+const MASTER_KEY = "$2a$10$50ktT5zrZbCrk5UnSNJaf.zzPNwVcGaUTtVjVbDeHxp31robYTlEu"; // only if private
 
-fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+fetch(`https://api.jsonbin.io/v3/b/$68b2fc7d43b1c97be930be9e/latest`, {
   headers: {
     "X-Master-Key": MASTER_KEY // remove if your bin is public
   }
